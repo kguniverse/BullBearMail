@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Subscription
-from .utils_market import get_realtime_details
+from .utils_market import get_realtime_details, is_valid_ticker
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -10,6 +10,18 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = ["id", "user", "stock_ticker", "email", "details"]
         read_only_fields = ["id", "user", "details"]
+
+    def validate_stock_ticker(self, value):
+        """
+        Validate and normalize stock_ticker before saving.
+        Raises ValidationError for invalid/unsupported tickers.
+        """
+        symbol = (value or "").strip().upper()
+        if not symbol:
+            raise serializers.ValidationError("stock_ticker is required")
+        if not is_valid_ticker(symbol):
+            raise serializers.ValidationError("Invalid or unsupported stock ticker")
+        return symbol
 
     def get_details(self, obj):
         return get_realtime_details(obj.stock_ticker)

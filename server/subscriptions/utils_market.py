@@ -46,7 +46,8 @@ def get_realtime_details(symbol: str) -> Optional[Dict]:
     symbol = (symbol or "").strip()
     if not symbol:
         return None
-
+    if not is_valid_ticker(symbol):
+        raise ValueError("Invalid ticker symbol")
     cache_key = f"yf_price:{symbol}"
     hit = cache.get(cache_key)
     if hit is not None:
