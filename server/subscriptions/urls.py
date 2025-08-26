@@ -1,6 +1,6 @@
-from django.urls import path
-from .views import PingView
+from rest_framework.routers import DefaultRouter
+from .views import SubscriptionViewSet
 
-urlpatterns = [
-    path("ping/", PingView.as_view(), name="ping"),
-]
+router = DefaultRouter()
+router.register(r"subscriptions", SubscriptionViewSet, basename="subscription")
+urlpatterns = router.urls

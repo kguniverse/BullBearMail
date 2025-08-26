@@ -30,10 +30,6 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 
-    # JWT login and refresh
-    path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-
-    # Your business APIs
-    path("api/", include("subscriptions.urls")),  # Example
+    path("api/", include("subscriptions.urls")),
+    path("api/", include("accounts.urls"))
 ]
