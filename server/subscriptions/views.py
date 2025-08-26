@@ -6,7 +6,7 @@ from rest_framework import viewsets, permissions, status
 from .models import Subscription
 from .serializers import SubscriptionSerializer
 from .permissions import IsOwnerOrAdmin
-from .utils_market import is_valid_ticker, get_realtime_price
+from .utils_market import is_valid_ticker, get_realtime_details
 
 class PingView(APIView):
     permission_classes = [IsAuthenticated]
@@ -43,7 +43,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         if not symbol:
             return Response({"detail": "ticker is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = get_realtime_price(symbol)
+        data = get_realtime_details(symbol)
         if not data:
             return Response({"detail": "Invalid or unsupported ticker"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(data, status=status.HTTP_200_OK)

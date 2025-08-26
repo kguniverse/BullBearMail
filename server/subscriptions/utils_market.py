@@ -31,7 +31,7 @@ def is_valid_ticker(symbol: str) -> bool:
         return False
 
 
-def get_realtime_price(symbol: str) -> Optional[Dict]:
+def get_realtime_details(symbol: str) -> Optional[Dict]:
     """
     Returns:
     {
