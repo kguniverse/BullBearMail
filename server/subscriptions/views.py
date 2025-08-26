@@ -17,6 +17,8 @@ class PingView(APIView):
 class SubscriptionViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionSerializer
     permission_classes = [IsOwnerOrAdmin]
+    queryset = Subscription.objects.all()
+    lookup_field = "pk" 
 
     def get_queryset(self):
         user = self.request.user

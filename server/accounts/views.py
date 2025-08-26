@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.generics import CreateAPIView
 
 User = get_user_model()
 
@@ -19,11 +19,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
 
-class RegisterView(APIView):
+class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
 
-    def post(self, request, *args, **kwargs):
-        ser = RegisterSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        ser.save()
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         return Response({"detail": "registered"}, status=status.HTTP_201_CREATED)
