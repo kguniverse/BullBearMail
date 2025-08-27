@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework import viewsets, permissions, status
 from .models import Subscription
+from .mailer import mailer
 from .serializers import SubscriptionSerializer
 from .permissions import IsOwnerOrAdmin
 from .utils_market import is_valid_ticker, get_realtime_details
@@ -53,38 +54,10 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsOwnerOrAdmin])
     def send(self, request, *args, **kwargs):
+
         subscription = self.get_object()
-        details = get_realtime_details(subscription.stock_ticker)
-        if not details:
-            return Response({"detail": "Failed to retrieve stock details"}, status=status.HTTP_400_BAD_REQUEST)
-
-        subject = f"Subscription update: {subscription.stock_ticker}"
-        body_lines = [
-            f"Hello {subscription.user},",
-            "",
-            f"Current data for {subscription.stock_ticker}:",
-            f"{details}",
-            "",
-            "If you did not request this, ignore this email.",
-        ]
-        body = "\n".join(body_lines)
-        try:
-            # pass
-            # Synchronous sending (asynchronous is recommended in production)
-            send_mail(
-                subject,
-                body,
-                getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com"),
-                [subscription.email],
-                fail_silently=False,
-            )
-            # Asynchronous example (requires implementation of tasks.send_subscription_email_task)
-            # from .tasks import send_subscription_email_task
-            # send_subscription_email_task.delay(subscription.id, details)
-        except BadHeaderError:
-            return Response({"detail": "Invalid header in email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except Exception:
-            logging.exception("Failed to send subscription email")
-            return Response({"detail": "Failed to send email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response({"detail": "Email sent"}, status=status.HTTP_200_OK)
+        # Only send the current subscription, no grouping
+        sent_count = mailer.send_single(subscription)
+        if sent_count:
+            return Response({"detail": "Email sent"}, status=status.HTTP_200_OK)
+        return Response({"detail": "Failed to send email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

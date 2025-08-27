@@ -157,3 +157,18 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get("GMAIL_USER")            # e.g. "youraccount@gmail.com"
 EMAIL_HOST_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")# App Password (16 chars) or SMTP password
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+
+# Celery configuration
+from celery.schedules import crontab
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
+CELERY_TIMEZONE = os.environ.get("CELERY_TIMEZONE", "US/Eastern")
+
+# Run every hour on the hour between 9AM-5PM ET on weekdays
+CELERY_BEAT_SCHEDULE = {
+    "send_subscription_emails": {
+        "task": "subscriptions.tasks.send_grouped_subscription_emails",
+        "schedule": crontab(minute=0, hour="9-17", day_of_week="mon-fri"),
+    },
+}
