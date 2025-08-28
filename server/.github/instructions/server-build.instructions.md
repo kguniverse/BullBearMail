@@ -1,4 +1,5 @@
 ---
 applyTo: '**'
 ---
-帮我搭建一个Django REST API项目，所有修改的代码不要出现在源代码处，显示在聊天中。
+
+Help me set up a Django REST API project. Do not make any changes to the source code; display all modified code in the chat.
