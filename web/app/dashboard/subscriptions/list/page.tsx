@@ -11,7 +11,8 @@ import {
     TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Loader2, Plus } from "lucide-react";
+import { RefreshCw, Loader2, Plus, Trash2, Send } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 type Subscription = {
     id: number;
@@ -157,26 +158,38 @@ export default function SubscriptionList() {
                                 <TableCell>{sub.stock}</TableCell>
                                 <TableCell>{sub.price}</TableCell>
                                 <TableCell>{sub.email}</TableCell>
-                                <TableCell className="space-x-2">
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => handleDelete(sub.id)}
-                                    >
-                                        Delete
-                                    </Button>
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        disabled={sendingId === sub.id}
-                                        onClick={() => handleSend(sub.id)}
-                                    >
-                                        {sendingId === sub.id ? (
-                                            <Loader2 className="animate-spin h-4 w-4 mx-auto" />
-                                        ) : (
-                                            "Send Now"
-                                        )}
-                                    </Button>
+                                <TableCell className="space-x-2 flex">
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button
+                                                type="button"
+                                                className="p-2 rounded hover:bg-red-100 text-red-600"
+                                                aria-label="Delete"
+                                                onClick={() => handleDelete(sub.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Delete</TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button
+                                                type="button"
+                                                className="p-2 rounded hover:bg-blue-100 text-blue-600"
+                                                aria-label="Send Now"
+                                                disabled={sendingId === sub.id}
+                                                onClick={() => handleSend(sub.id)}
+                                            >
+                                                {sendingId === sub.id ? (
+                                                    <Loader2 className="animate-spin h-4 w-4" />
+                                                ) : (
+                                                    <Send className="h-4 w-4" />
+                                                )}
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Send Now</TooltipContent>
+                                    </Tooltip>
                                 </TableCell>
                             </TableRow>
                         ))}
