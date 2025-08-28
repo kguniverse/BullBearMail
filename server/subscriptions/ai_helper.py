@@ -41,9 +41,10 @@ def generate_recommendation(details: dict) -> dict:
             import openai
             openai.api_key = OPENAI_API_KEY
             prompt = (
-                "First, search for the historical price data of this stock. "
+                "First, review the historical price data for this stock. "
                 "Then, based on these historical prices and the current market details, provide a concise investment recommendation: BUY/SELL/HOLD, and explain the reason in one sentence.\n\n"
-                f"Current market details: {details}\n\nPlease reply in JSON format, including 'action' and 'reason' fields."
+                f"Current market details: {details}\n\n"
+                "Respond ONLY with a valid JSON object, no markdown, no code block, no explanation. The JSON must have keys 'action' and 'reason'. Example: {\"action\": \"BUY\", \"reason\": \"Strong upward trend\"}"
             )
             # 新版接口
             resp = openai.chat.completions.create(
@@ -53,7 +54,6 @@ def generate_recommendation(details: dict) -> dict:
                 temperature=0.3,
             )
             text = resp.choices[0].message.content
-            print("OpenAI response:", text)
             import json
             try:
                 parsed = json.loads(text)
