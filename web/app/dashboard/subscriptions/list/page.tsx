@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 type Subscription = {
     id: number;
@@ -9,21 +10,21 @@ type Subscription = {
     email: string;
 };
 
-export default function SubscriptionsPage() {
+export default function SubscriptionList() {
     const [subs, setSubs] = useState<Subscription[]>([]);
     const [loading, setLoading] = useState(true);
+    const { data: session, status } = useSession();
 
-    // Fetch subscription list
+    // 获取订阅列表
     useEffect(() => {
-        const token = localStorage.getItem("token");
+        if (status !== "authenticated") return;
         fetch("http://localhost:8000/api/subscriptions/", {
             method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${(session as any).access}` },
         })
             .then(res => res.json())
             .then(data => {
-                console.log(data);
-                //extract price from data.details
+                // 提取价格信息
                 const extractedData = data.map((item: any) => ({
                     id: item.id,
                     stock: item.stock_ticker,
@@ -33,26 +34,26 @@ export default function SubscriptionsPage() {
                 setSubs(extractedData);
                 setLoading(false);
             });
-    }, []);
+    }, [session, status]);
 
-    // Delete subscription
+    // 删除订阅
     const handleDelete = async (id: number) => {
-        const token = localStorage.getItem("token");
+        if (status !== "authenticated") return;
         await fetch(`http://localhost:8000/api/subscriptions/${id}/`, {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${(session as any).access}` },
         });
         setSubs(subs.filter(sub => sub.id !== id));
     };
 
-    // Send now
+    // 立即发送
     const handleSend = async (id: number) => {
-        const token = localStorage.getItem("token");
+        if (status !== "authenticated") return;
         await fetch(`http://localhost:8000/api/subscriptions/${id}/send/`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${(session as any).access}` },
         });
-        alert("Send successful!");
+        alert("发送成功！");
     };
 
     return (
@@ -103,3 +104,6 @@ export default function SubscriptionsPage() {
         </div>
     );
 }
+
+
+

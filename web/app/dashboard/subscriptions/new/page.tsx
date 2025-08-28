@@ -1,14 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/lib/axiosInstance";
 
 function validateStock(stock: string) {
-    // Simple validation: stock code is alphanumeric, length 2-6
     return /^[A-Za-z0-9]{2,6}$/.test(stock);
 }
 
 function validateEmail(email: string) {
-    // Simple email format validation
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
@@ -36,19 +35,15 @@ export default function NewSubscriptionPage() {
             setError("Price must be a number");
             return;
         }
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:8000/api/subscriptions/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ stock, email }),
-        });
-        if (res.ok) {
+        try {
+            await axiosInstance.post("subscriptions/", {
+                stock,
+                email,
+                price: Number(price),
+            });
             setSuccess("Subscription created successfully");
             setTimeout(() => router.push("/subscriptions"), 1500);
-        } else {
+        } catch {
             setError("Failed to create subscription");
         }
     };
@@ -65,6 +60,14 @@ export default function NewSubscriptionPage() {
                     className={`w-full mb-4 p-2 border rounded ${stock && !validateStock(stock) ? "border-red-500" : ""}`}
                     value={stock}
                     onChange={e => setStock(e.target.value)}
+                    required
+                />
+                <input
+                    type="text"
+                    placeholder="Price"
+                    className={`w-full mb-4 p-2 border rounded ${price && isNaN(Number(price)) ? "border-red-500" : ""}`}
+                    value={price}
+                    onChange={e => setPrice(e.target.value)}
                     required
                 />
                 <input

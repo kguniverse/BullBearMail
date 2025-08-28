@@ -1,5 +1,8 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { SessionProvider } from "next-auth/react";
 import {
     SidebarInset,
     SidebarProvider,
@@ -28,9 +31,22 @@ const navigation = [
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { status } = useSession();
     const hideSidebar = pathname === "/login" || pathname === "/register";
 
-    return hideSidebar ? (
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push("/login");
+        }
+    }, [status, router]);
+
+    // 未登录时不显示内容
+    if (status === "unauthenticated") {
+        return null;
+    }
+
+    return (hideSidebar ? (
         <main className="min-h-screen flex items-center justify-center">{children}</main>
     ) : (
         <SidebarProvider defaultOpen={false}>
@@ -63,5 +79,5 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <div className="p-8">{children}</div>
             </SidebarInset>
         </SidebarProvider>
-    );
+    ));
 }
