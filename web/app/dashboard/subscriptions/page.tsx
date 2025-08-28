@@ -95,7 +95,7 @@ export default function SubscriptionsPage() {
                 </table>
             )}
             <div className="mt-6 text-right">
-                <a href="/subscriptions/new" className="text-blue-600 underline">Create New Subscription</a>
+                <a href="/dashboard/subscriptions/new" className="text-blue-600 underline">Create New Subscription</a>
             </div>
         </div>
     );
