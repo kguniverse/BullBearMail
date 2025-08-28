@@ -30,7 +30,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return (hideSidebar ? (
         <main className="min-h-screen flex items-center justify-center">{children}</main>
     ) : (
-        <SidebarProvider defaultOpen={false}>
+        <SidebarProvider defaultOpen={true}>
             <SidebarNav />
             <SidebarInset>
                 <Header />
