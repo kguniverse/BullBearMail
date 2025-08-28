@@ -2,6 +2,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import {
+    Table,
+    TableHeader,
+    TableRow,
+    TableHead,
+    TableBody,
+    TableCell,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, Loader2, Plus } from "lucide-react";
 
 type Subscription = {
     id: number;
@@ -13,11 +23,18 @@ type Subscription = {
 export default function SubscriptionList() {
     const [subs, setSubs] = useState<Subscription[]>([]);
     const [loading, setLoading] = useState(true);
+    const [sendingId, setSendingId] = useState<number | null>(null);
+    const [addMode, setAddMode] = useState(false);
+    const [addLoading, setAddLoading] = useState(false);
+    const [newStock, setNewStock] = useState("");
+    const [newEmail, setNewEmail] = useState("");
+    const [error, setError] = useState("");
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const { data: session, status } = useSession();
 
-    // 获取订阅列表
-    useEffect(() => {
+    const fetchSubscriptions = () => {
         if (status !== "authenticated") return;
+        setLoading(true);
         fetch("http://localhost:8000/api/subscriptions/", {
             method: "GET",
             headers: { Authorization: `Bearer ${(session as any).access}` },
@@ -32,8 +49,15 @@ export default function SubscriptionList() {
                     email: item.email,
                 }));
                 setSubs(extractedData);
+                setLastUpdated(new Date());
                 setLoading(false);
             });
+    };
+
+    // 获取订阅列表
+    useEffect(() => {
+        fetchSubscriptions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [session, status]);
 
     // 删除订阅
@@ -49,58 +73,179 @@ export default function SubscriptionList() {
     // 立即发送
     const handleSend = async (id: number) => {
         if (status !== "authenticated") return;
+        setSendingId(id);
         await fetch(`http://localhost:8000/api/subscriptions/${id}/send/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${(session as any).access}` },
         });
-        alert("发送成功！");
+        setSendingId(null);
+        alert("Send successful!");
+    };
+
+    // 添加订阅
+    const handleAdd = async () => {
+        if (status !== "authenticated") return;
+        setAddLoading(true);
+        const res = await fetch("http://localhost:8000/api/subscriptions/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${(session as any).access}`,
+            },
+            body: JSON.stringify({
+                stock_ticker: newStock,
+                email: newEmail,
+            }),
+        });
+        const data = await res.json();
+        setAddLoading(false);
+        if (res.ok) {
+            setSubs([
+                ...subs,
+                {
+                    id: data.id,
+                    stock: data.stock_ticker,
+                    price: parseFloat(data.details.price).toFixed(2).toString() + " " + data.details.currency,
+                    email: data.email,
+                },
+            ]);
+            setNewStock("");
+            setNewEmail("");
+            setAddMode(false);
+            setError("");
+        } else {
+            const errorMsg = Object.entries(data)
+                .map(([field, messages]) => `${field}: ${(Array.isArray(messages) ? messages.join(", ") : messages)}`)
+                .join(" | ");
+            setError(errorMsg);
+            setTimeout(() => setError(""), 2000);
+        }
     };
 
     return (
         <div className="max-w-3xl mx-auto mt-10">
-            <h2 className="text-2xl font-bold mb-6">My Subscriptions</h2>
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">My Subscriptions</h2>
+                <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">
+                        Last Updated: {lastUpdated ? lastUpdated.toLocaleString() : "--"}
+                    </span>
+                    <Button size="sm" onClick={fetchSubscriptions} disabled={loading}>
+                        {loading ? (
+                            <Loader2 className="animate-spin h-4 w-4" />
+                        ) : (
+                            <RefreshCw className="h-4 w-4" />
+                        )}
+                    </Button>
+                </div>
+            </div>
             {loading ? (
                 <div>Loading...</div>
             ) : (
-                <table className="w-full border rounded shadow">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="p-2 border">Stock</th>
-                            <th className="p-2 border">Price</th>
-                            <th className="p-2 border">Email</th>
-                            <th className="p-2 border">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Stock</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {subs.map(sub => (
-                            <tr key={sub.id} className="text-center">
-                                <td className="border p-2">{sub.stock}</td>
-                                <td className="border p-2">{sub.price}</td>
-                                <td className="border p-2">{sub.email}</td>
-                                <td className="border p-2 space-x-2">
-                                    <button
-                                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                            <TableRow key={sub.id}>
+                                <TableCell>{sub.stock}</TableCell>
+                                <TableCell>{sub.price}</TableCell>
+                                <TableCell>{sub.email}</TableCell>
+                                <TableCell className="space-x-2">
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
                                         onClick={() => handleDelete(sub.id)}
                                     >
                                         Delete
-                                    </button>
-                                    <button
-                                        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                                    </Button>
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        disabled={sendingId === sub.id}
                                         onClick={() => handleSend(sub.id)}
                                     >
-                                        Send Now
-                                    </button>
-                                </td>
-                            </tr>
+                                        {sendingId === sub.id ? (
+                                            <Loader2 className="animate-spin h-4 w-4 mx-auto" />
+                                        ) : (
+                                            "Send Now"
+                                        )}
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
                         ))}
-                    </tbody>
-                </table>
+                        {/* Quick add row */}
+                        {!addMode ? (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center">
+                                    <button
+                                        type="button"
+                                        className="p-2 rounded-full bg-blue-100 hover:bg-blue-200"
+                                        onClick={() => setAddMode(true)}
+                                    >
+                                        <Plus className="h-5 w-5 text-blue-600" />
+                                    </button>
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            <TableRow>
+                                <TableCell>
+                                    <input
+                                        type="text"
+                                        className="border rounded px-2 py-1 w-full"
+                                        placeholder="Stock"
+                                        value={newStock}
+                                        onChange={e => setNewStock(e.target.value)}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <span className="text-gray-400">Auto</span>
+                                </TableCell>
+                                <TableCell>
+                                    <input
+                                        type="email"
+                                        className="border rounded px-2 py-1 w-full"
+                                        placeholder="Email"
+                                        value={newEmail}
+                                        onChange={e => setNewEmail(e.target.value)}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                            onClick={handleAdd}
+                                            disabled={addLoading || !newStock || !newEmail}
+                                        >
+                                            {addLoading ? <Loader2 className="animate-spin h-4 w-4 mx-auto" /> : "Add"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                            onClick={() => setAddMode(false)}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             )}
-            <div className="mt-6 text-right">
+            {error && <div className="mt-4 text-red-500 font-medium">{error}</div>}
+            {/* <div className="mt-6 text-right">
                 <Link href="/dashboard/subscriptions/new" className="text-blue-600 underline">
                     Create New Subscription
                 </Link>
-            </div>
+            </div> */}
         </div>
     );
 }
