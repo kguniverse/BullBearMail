@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Subscription = {
     id: number;
@@ -95,7 +96,9 @@ export default function SubscriptionsPage() {
                 </table>
             )}
             <div className="mt-6 text-right">
-                <a href="/dashboard/subscriptions/new" className="text-blue-600 underline">Create New Subscription</a>
+                <Link href="/dashboard/subscriptions/new" className="text-blue-600 underline">
+                    Create New Subscription
+                </Link>
             </div>
         </div>
     );
