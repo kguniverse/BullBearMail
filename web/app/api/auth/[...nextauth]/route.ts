@@ -26,6 +26,7 @@ const handler = NextAuth({
                         return {
                             id: res.data.user.id,
                             name: res.data.user.username,
+                            isadmin: res.data.user.isadmin,
                             access: res.data.access,
                             refresh: res.data.refresh,
                         };
@@ -46,9 +47,11 @@ const handler = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             // 登录时保存 access 和 refresh token
+            console.log("jwt callback, user:", user);
             if (user) {
                 token.access = (user as any).access;
                 token.refresh = (user as any).refresh;
+                token.isadmin = (user as any).isadmin;
             }
 
             // 检查 access token 是否过期，过期则用 refresh token 自动刷新
@@ -88,6 +91,7 @@ const handler = NextAuth({
             // 类型断言，告诉 TypeScript session 可以有 access 和 refresh 字段
             (session as any).access = token.access;
             (session as any).refresh = token.refresh;
+            (session as any).user.isadmin = token.isadmin;
             return session;
         },
     },

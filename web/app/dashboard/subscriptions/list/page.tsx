@@ -16,6 +16,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 
 type Subscription = {
     id: number;
+    user: string;
     stock: string;
     price: string;
     email: string;
@@ -48,6 +49,7 @@ export default function SubscriptionList() {
                     stock: item.stock_ticker,
                     price: parseFloat(item.details.price).toFixed(2).toString() + " " + item.details.currency,
                     email: item.email,
+                    user: item.user,
                 }));
                 setSubs(extractedData);
                 setLastUpdated(new Date());
@@ -104,6 +106,7 @@ export default function SubscriptionList() {
                 ...subs,
                 {
                     id: data.id,
+                    user: data.user,
                     stock: data.stock_ticker,
                     price: parseFloat(data.details.price).toFixed(2).toString() + " " + data.details.currency,
                     email: data.email,
@@ -118,10 +121,11 @@ export default function SubscriptionList() {
                 .map(([field, messages]) => `${field}: ${(Array.isArray(messages) ? messages.join(", ") : messages)}`)
                 .join(" | ");
             setError(errorMsg);
-            setTimeout(() => setError(""), 2000);
+            // setTimeout(() => setError(""), 2000);
         }
         setAddLoading(false);
     };
+    const isAdmin = (session as any)?.user?.isadmin;
 
     return (
         <div className="max-w-3xl mx-auto mt-10">
@@ -146,6 +150,7 @@ export default function SubscriptionList() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            {isAdmin && <TableHead>User</TableHead>}
                             <TableHead>Stock</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Email</TableHead>
@@ -155,6 +160,7 @@ export default function SubscriptionList() {
                     <TableBody>
                         {subs.map(sub => (
                             <TableRow key={sub.id}>
+                                {isAdmin && <TableCell>{sub.user}</TableCell>}
                                 <TableCell>{sub.stock}</TableCell>
                                 <TableCell>{sub.price}</TableCell>
                                 <TableCell>{sub.email}</TableCell>
