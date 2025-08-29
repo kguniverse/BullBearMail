@@ -12,8 +12,7 @@ import SidebarNav from "@/components/SidebarNav";
 export default function MainLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const { status, data } = useSession();
-    console.log("Session data:", data);
+    const { status } = useSession();
     const hideSidebar = pathname === "/login" || pathname === "/register";
 
     useEffect(() => {

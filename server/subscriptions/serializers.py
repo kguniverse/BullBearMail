@@ -28,4 +28,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
-        return super().create(validated_data)
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(f"Error creating subscription: {str(e)}")

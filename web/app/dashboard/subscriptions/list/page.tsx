@@ -99,7 +99,6 @@ export default function SubscriptionList() {
             }),
         });
         const data = await res.json();
-        setAddLoading(false);
         if (res.ok) {
             setSubs([
                 ...subs,
@@ -121,6 +120,7 @@ export default function SubscriptionList() {
             setError(errorMsg);
             setTimeout(() => setError(""), 2000);
         }
+        setAddLoading(false);
     };
 
     return (
