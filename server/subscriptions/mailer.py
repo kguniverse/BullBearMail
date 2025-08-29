@@ -28,10 +28,19 @@ class SubscriptionMailer:
 
     def _build_message_for_email(self, email: str, subs: List[Subscription]) -> Dict[str, str]:
         lines = [f"Hello,\n\nHere are your subscription updates:\n"]
-        details_list = [get_realtime_details(s.stock_ticker) or {} for s in subs]
-        recommendations = generate_recommendation(details_list)
+        details_list = []
         for s in subs:
-            details = details_list[subs.index(s)]
+            try:
+                d = get_realtime_details(s.stock_ticker) or {}
+            except Exception:
+                logger.exception("Failed to fetch realtime details for %s", s.stock_ticker)
+                d = {}
+            if isinstance(d, dict):
+                d.setdefault("stock_ticker", s.stock_ticker)
+            details_list.append(d)
+
+        recommendations = generate_recommendation(details_list)
+        for s, details in zip(subs, details_list):
             rec = recommendations.get(s.stock_ticker, {})
             price = details.get('price')
             price_str = f"{price:.2f}" if isinstance(price, (int, float)) else price
@@ -63,10 +72,15 @@ class SubscriptionMailer:
         return len(self.send_all(subs))
 
     def send_single(self, subscription):
-        details = get_realtime_details(subscription.stock_ticker)
+        try:
+            details = get_realtime_details(subscription.stock_ticker) or {}
+        except Exception:
+            logger.exception("Failed to fetch realtime details for %s", subscription.stock_ticker)
+            details = {}
         if not details:
             return 0
-        rec = generate_recommendation([details])[subscription.stock_ticker]
+        details.setdefault("stock_ticker", subscription.stock_ticker)
+        rec = generate_recommendation([details]).get(subscription.stock_ticker, {})
         subject = f"Subscription update: {subscription.stock_ticker}"
         body_lines = [
             f"Hello {subscription.user},",
