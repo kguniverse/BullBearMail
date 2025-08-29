@@ -32,6 +32,7 @@ export default function SubscriptionList() {
     const [newEmail, setNewEmail] = useState("");
     const [error, setError] = useState("");
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [sendAllLoading, setSendAllLoading] = useState(false);
     const { data: session, status } = useSession();
 
     const fetchSubscriptions = () => {
@@ -127,11 +128,39 @@ export default function SubscriptionList() {
     };
     const isAdmin = (session as any)?.user?.isadmin;
 
+    const handleSendAll = async () => {
+        if (status !== "authenticated" || subs.length === 0) return;
+        setSendAllLoading(true);
+        // You can send all in one request if backend supports, or loop through each
+        for (const sub of subs) {
+            await fetch(`http://localhost:8000/api/subscriptions/${sub.id}/send/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${(session as any).access}` },
+            });
+        }
+        setSendAllLoading(false);
+        alert("All subscriptions sent!");
+    };
+
     return (
         <div className="max-w-3xl mx-auto mt-10">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold">My Subscriptions</h2>
                 <div className="flex items-center gap-4">
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleSendAll}
+                        disabled={sendAllLoading || subs.length === 0}
+                        className="flex items-center gap-2"
+                    >
+                        {sendAllLoading ? (
+                            <Loader2 className="animate-spin h-4 w-4" />
+                        ) : (
+                            <Send className="h-4 w-4" />
+                        )}
+                        Send All
+                    </Button>
                     <span className="text-sm text-gray-500">
                         Last Updated: {lastUpdated ? lastUpdated.toLocaleString() : "--"}
                     </span>
@@ -260,11 +289,7 @@ export default function SubscriptionList() {
                 </Table>
             )}
             {error && <div className="mt-4 text-red-500 font-medium">{error}</div>}
-            {/* <div className="mt-6 text-right">
-                <Link href="/dashboard/subscriptions/new" className="text-blue-600 underline">
-                    Create New Subscription
-                </Link>
-            </div> */}
+
         </div>
     );
 }
