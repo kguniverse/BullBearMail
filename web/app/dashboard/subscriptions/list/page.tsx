@@ -44,7 +44,12 @@ export default function SubscriptionList() {
         })
             .then(res => res.json())
             .then(data => {
-                // 提取价格信息
+                if (!Array.isArray(data) || !data.length) {
+                    setSubs([]);
+                    setLastUpdated(new Date());
+                    setLoading(false);
+                    return;
+                }
                 const extractedData = data.map((item: any) => ({
                     id: item.id,
                     stock: item.stock_ticker,

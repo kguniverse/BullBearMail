@@ -17,7 +17,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { User2, ChevronUp, Plus, List } from "lucide-react";
+import { User2, ChevronUp, Plus, List, Settings } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 const navigation = [
@@ -25,6 +25,12 @@ const navigation = [
         title: "Subscriptions", items: [
             { title: "All Subscriptions", href: "/dashboard/subscriptions/list", icon: List },
             { title: "New Subscription", href: "/dashboard/subscriptions/new", icon: Plus }
+        ]
+    },
+    {
+        title: "settings", items: [
+            { title: "General", href: "/dashboard/settings/", icon: Settings },
+
         ]
     }
 ];
