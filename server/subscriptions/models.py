@@ -10,7 +10,7 @@ class Subscription(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "stock_ticker"], name="unique_user_stock_ticker")
+            models.UniqueConstraint(fields=["user", "stock_ticker", "email"], name="unique_user_stock_ticker_email")
         ]
 
     def __str__(self):
