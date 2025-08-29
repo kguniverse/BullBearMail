@@ -132,12 +132,10 @@ export default function SubscriptionList() {
         if (status !== "authenticated" || subs.length === 0) return;
         setSendAllLoading(true);
         // You can send all in one request if backend supports, or loop through each
-        for (const sub of subs) {
-            await fetch(`http://localhost:8000/api/subscriptions/${sub.id}/send/`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${(session as any).access}` },
-            });
-        }
+        await fetch("http://localhost:8000/api/subscriptions/sendall/", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${(session as any).access}` },
+        });
         setSendAllLoading(false);
         alert("All subscriptions sent!");
     };
