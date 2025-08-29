@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-&vh84hr9abr4+#h_r9oqoo6=bca6np6cbo^wug9$a5-@i363m2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'demo.modulynx.io']
 
 
 # Application definition
