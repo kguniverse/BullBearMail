@@ -22,7 +22,6 @@ const handler = NextAuth({
                     );
                     if (res.data && res.data.access && res.data.refresh) {
                         // 返回用户信息和 access/refresh token
-                        console.log("login:", res.data);
                         return {
                             id: res.data.user.id,
                             name: res.data.user.username,
@@ -47,7 +46,6 @@ const handler = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             // 登录时保存 access 和 refresh token
-            console.log("jwt callback, user:", user);
             if (user) {
                 token.access = (user as any).access;
                 token.refresh = (user as any).refresh;
