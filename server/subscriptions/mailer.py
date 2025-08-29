@@ -28,10 +28,14 @@ class SubscriptionMailer:
 
     def _build_message_for_email(self, email: str, subs: List[Subscription]) -> Dict[str, str]:
         lines = [f"Hello,\n\nHere are your subscription updates:\n"]
+        details_list = [get_realtime_details(s.stock_ticker) or {} for s in subs]
+        recommendations = generate_recommendation(details_list)
         for s in subs:
-            details = get_realtime_details(s.stock_ticker) or {}
-            rec = generate_recommendation(details)
-            lines.append(f"- {s.stock_ticker}: {details.get('price')} ({rec['action']}) - {rec['reason']}")
+            details = details_list[subs.index(s)]
+            rec = recommendations.get(s.stock_ticker, {})
+            price = details.get('price')
+            price_str = f"{price:.2f}" if isinstance(price, (int, float)) else price
+            lines.append(f"- {s.stock_ticker}: {price_str} ({rec.get('action', 'HOLD')}) - {rec.get('reason', '')}")
         lines.append("\nIf you don't want these emails, update your subscription settings.")
         subject = f"Subscription digest: {', '.join([s.stock_ticker for s in subs])}"
         body = "\n".join(lines)
@@ -62,15 +66,15 @@ class SubscriptionMailer:
         details = get_realtime_details(subscription.stock_ticker)
         if not details:
             return 0
-        rec = generate_recommendation(details)
+        rec = generate_recommendation([details])[subscription.stock_ticker]
         subject = f"Subscription update: {subscription.stock_ticker}"
         body_lines = [
             f"Hello {subscription.user},",
             "",
             "This email is triggered by your subscription.",
             f"Current data for {subscription.stock_ticker}:",
-            f"{details}",
-            f"AI Recommendation: {rec['action']} - {rec['reason']}",
+            f"- {subscription.stock_ticker}: {details.get('price', 0):.2f}",
+            f"AI Recommendation: {rec.get('action', 'HOLD')} - {rec.get('reason', '')}",
             "",
             "If you did not request this, ignore this email.",
         ]

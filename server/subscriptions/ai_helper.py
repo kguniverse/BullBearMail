@@ -34,54 +34,64 @@ def _simple_rule_recommendation(details: dict) -> tuple[str, str]:
         return "HOLD", "Error computing rule"
 
 
-def generate_recommendation(details: dict) -> dict:
-    """Generate recommendation dict: {action, reason, source}. Use OpenAI if available, else simple rules."""
+def generate_recommendation(details: list):
+    """
+    Generate recommendation(s) for one or more stocks.
+    details is a list of dicts, batch all stocks in one OpenAI prompt and return a dict keyed by stock_ticker.
+    """
+    if not details:
+        return {}
     if USE_OPENAI:
         try:
             import openai
             openai.api_key = OPENAI_API_KEY
+            # 构造 prompt
             prompt = (
-                "First, review the historical price data for this stock. "
-                "Then, based on these historical prices and the current market details, provide a concise investment recommendation: BUY/SELL/HOLD, and explain the reason in one sentence.\n\n"
-                f"Current market details: {details}\n\n"
-                "Respond ONLY with a valid JSON object, no markdown, no code block, no explanation. The JSON must have keys 'action' and 'reason'. Example: {\"action\": \"BUY\", \"reason\": \"Strong upward trend\"}"
+                "For each stock in the following list, review the historical price data and current market details, then provide a concise investment recommendation: BUY/SELL/HOLD, and explain the reason in one sentence.\n\n"
+                "Input: " + str(details) + "\n\n"
+                "Respond ONLY with a valid JSON array, no markdown, no code block, no explanation. Each array element must be a JSON object with keys 'stock_ticker', 'action', 'reason'. Example: [{\"stock_ticker\": \"AAPL\", \"action\": \"BUY\", \"reason\": \"Strong upward trend\"}]"
             )
-            # 新版接口
             resp = openai.chat.completions.create(
                 model=os.environ.get("OPENAI_MODEL", "gpt-4.1"),
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=60,
+                max_tokens=120 * len(details),
                 temperature=0.3,
             )
             text = resp.choices[0].message.content
             import json
             try:
                 parsed = json.loads(text)
-                return {"action": parsed.get("action", "HOLD"), "reason": parsed.get("reason", ""), "source": "openai"}
+                # 返回 dict: {stock_ticker: {action, reason, source}}
+                out = {}
+                for item in parsed:
+                    ticker = item.get("stock_ticker")
+                    out[ticker] = {
+                        "action": item.get("action", "HOLD"),
+                        "reason": item.get("reason", ""),
+                        "source": "openai"
+                    }
+                return out
             except Exception:
-                # fallback: parse lines
-                lines = text.strip().splitlines()
-                action = "HOLD"
-                reason = ""
-                for ln in lines:
-                    up = ln.upper()
-                    if "BUY" in up:
-                        action = "BUY"
-                        reason = ln
-                        break
-                    if "SELL" in up:
-                        action = "SELL"
-                        reason = ln
-                        break
-                    if "HOLD" in up:
-                        action = "HOLD"
-                        reason = ln
-                        break
-                return {"action": action, "reason": reason, "source": "openai_raw"}
+                logger.exception("OpenAI batch parse failed, falling back to rules")
+                # fallback: 用本地规则
+                out = {}
+                for d in details:
+                    ticker = d.get("stock_ticker")
+                    action, reason = _simple_rule_recommendation(d)
+                    out[ticker] = {"action": action, "reason": reason, "source": "rules_fallback"}
+                return out
         except Exception:
-            logger.exception("OpenAI recommendation failed, falling back to rules")
-            action, reason = _simple_rule_recommendation(details)
-            return {"action": action, "reason": reason, "source": "rules_fallback"}
+            logger.exception("OpenAI batch recommendation failed, falling back to rules")
+            out = {}
+            for d in details:
+                ticker = d.get("stock_ticker")
+                action, reason = _simple_rule_recommendation(d)
+                out[ticker] = {"action": action, "reason": reason, "source": "rules_fallback"}
+            return out
     else:
-        action, reason = _simple_rule_recommendation(details)
-        return {"action": action, "reason": reason, "source": "rules"}
+        out = {}
+        for d in details:
+            ticker = d.get("stock_ticker")
+            action, reason = _simple_rule_recommendation(d)
+            out[ticker] = {"action": action, "reason": reason, "source": "rules"}
+        return out

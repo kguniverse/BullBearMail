@@ -61,3 +61,15 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         if sent_count:
             return Response({"detail": "Email sent"}, status=status.HTTP_200_OK)
         return Response({"detail": "Failed to send email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def sendall(self, request, *args, **kwargs):
+        # Only send all subscriptions for the current user
+        user = request.user
+        subs = Subscription.objects.filter(user=user)
+        sent_emails = mailer.send_all(subs)
+        return Response({
+            "sent_count": len(sent_emails),
+            "emails": sent_emails
+        }, status=status.HTTP_200_OK)
+
