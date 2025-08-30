@@ -64,9 +64,11 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def sendall(self, request, *args, **kwargs):
-        # Only send all subscriptions for the current user
         user = request.user
-        subs = Subscription.objects.filter(user=user)
+        if user.is_staff or user.is_superuser:
+            subs = Subscription.objects.all()
+        else:
+            subs = Subscription.objects.filter(user=user)
         sent_emails = mailer.send_all(subs)
         return Response({
             "sent_count": len(sent_emails),
