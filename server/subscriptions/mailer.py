@@ -1,5 +1,5 @@
 from typing import List, Dict
-from django.core.mail import send_mail
+# from django.core.mail import send_mail
 from django.conf import settings
 from .models import Subscription
 from .utils_market import get_realtime_details
@@ -7,8 +7,23 @@ from .ai_helper import generate_recommendation
 import logging
 import pytz
 from datetime import datetime
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.errors import HttpError
+import base64
+import os
+from email.message import EmailMessage
 
 logger = logging.getLogger(__name__)
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.compose",
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.modify"
+]
 
 class SubscriptionMailer:
     """Builds and sends grouped subscription emails per recipient."""
@@ -19,6 +34,26 @@ class SubscriptionMailer:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
+
+    def __init__(self):
+
+        creds = None
+        if os.path.exists("token.json"):
+            creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    "credentials.json", SCOPES
+                )
+                creds = flow.run_local_server(port=0)
+                # Save the credentials for the next run
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
+
+        self.creds = creds
 
     def _group_by_email(self, subs):
         out = {}
@@ -50,13 +85,35 @@ class SubscriptionMailer:
         body = "\n".join(lines)
         return {"subject": subject, "body": body}
 
+    def _send_email_gmail(self, subject, body, to_emails):
+        for to_email in to_emails:
+            service = build('gmail', 'v1', credentials=self.creds)
+            message = EmailMessage()
+            message['To'] = to_email
+            message['From'] = settings.DEFAULT_FROM_EMAIL
+            message['Subject'] = subject
+
+            message.set_content(body)
+
+            raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+            create_message = {"raw": raw}
+            # pylint: disable=E1101
+            send = (
+                service.users()
+                .messages()
+                .send(userId="me", body=create_message)
+                .execute()
+            )
+
+            print(send)
+
     def send_all(self, subscriptions):
         by_email = self._group_by_email(subscriptions)
         sent = []
         for email, subs in by_email.items():
             msg = self._build_message_for_email(email, subs)
             try:
-                send_mail(msg['subject'], msg['body'], getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com'), [email], fail_silently=False)
+                self._send_email_gmail(msg['subject'], msg['body'], [email])
                 sent.append(email)
             except Exception:
                 logger.exception("Failed to send grouped email to %s", email)
@@ -94,12 +151,10 @@ class SubscriptionMailer:
         ]
         body = "\n".join(body_lines)
         try:
-            send_mail(
+            self._send_email_gmail(
                 subject,
                 body,
-                getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com"),
                 [subscription.email],
-                fail_silently=False,
             )
             return 1
         except Exception:

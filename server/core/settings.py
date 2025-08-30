@@ -159,6 +159,11 @@ EMAIL_HOST_USER = os.environ.get("GMAIL_USER")            # e.g. "youraccount@gm
 EMAIL_HOST_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")# App Password (16 chars) or SMTP password
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
+GMAIL_API_CREDENTIALS_FILE = os.environ.get("GMAIL_API_CREDENTIALS_FILE", "")
+
+# Timeout (seconds) for SMTP socket connections to avoid long blocking on network failures.
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
+
 # Celery configuration
 from celery.schedules import crontab
 
