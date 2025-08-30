@@ -22,6 +22,11 @@ docker compose exec api python manage.py migrate --noinput
 docker compose exec api python manage.py collectstatic --noinput
 ```
 4. Visit `http://localhost` (nginx proxies frontend and API).
+5. Create a Django admin superuser (optional, for admin interface):
+```bash
+docker compose exec api python manage.py createsuperuser
+```
+6. Access Django admin at `http://localhost/admin/` to manage users and subscriptions.
 
 Notes:
 - nginx proxies requests to the Next app and the Django api. By default this repo mounts Django under `/backend` (see `docker-compose.yml` via `NEXT_PUBLIC_DJANGO_API_URL=/backend`).
@@ -81,6 +86,23 @@ PY
 ```
 - Gmail restrictions: enable 2FA and use an App Password; verify the account isn't blocking the login.
 - Production best-practice: send mail asynchronously via Celery (the project already has `worker` and `beat`). Move heavy or unreliable mail sends into tasks with retries.
+
+## Django Admin Interface
+The project includes Django's built-in admin interface for managing users and subscriptions:
+
+- **Access**: Visit `http://localhost/backend/admin/` (when running via Docker) or `http://localhost:8000/admin/` (local Django server)
+- **Features**: 
+  - View and manage all user accounts (from `django.contrib.auth.models.User`)
+  - View and manage subscription records (from `subscriptions.models.Subscription`)
+  - Monitor subscription status, email addresses, and stock tickers
+- **Create superuser**:
+```bash
+# Docker environment
+docker compose exec api python manage.py createsuperuser
+
+# Local environment
+cd server && python manage.py createsuperuser
+```
 
 ## Tests
 - Server tests live under `server/*/tests.py`. Run them with:
