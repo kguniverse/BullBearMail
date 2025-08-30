@@ -1,0 +1,75 @@
+services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    volumes:
+      - ./server:/app
+      - ./server/db.sqlite3:/app/db.sqlite3
+    env_file:
+      - ./server/.env
+    # no host port: nginx will proxy to this service
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: celery -A core worker -l info
+    volumes:
+      - ./server:/app
+    env_file:
+      - ./server/.env
+    depends_on:
+      - redis
+
+  beat:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: celery -A core beat -l info
+    volumes:
+      - ./server:/app
+    env_file:
+      - ./server/.env
+    depends_on:
+      - redis
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    env_file:
+      - ./web/product.env
+    # no host port: nginx will proxy to this service
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_DJANGO_API_URL=/backend
+      - NEXTAUTH_URL=http://localhost
+    depends_on:
+      - api
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+      - web
+    volumes:
+      - ./server/staticfiles:/srv/app/static:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./web/.next:/srv/app/web_next:ro
+
+networks:
+  default:
+    driver: bridge

@@ -3,7 +3,7 @@ import { getSession } from "next-auth/react";
 
 // 创建 axios 实例
 const instance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_DJANGO_API_URL + "/api/",
+  baseURL: process.env.NEXT_PUBLIC_DJANGO_API_URL,
   timeout: 10000,
 });
 

@@ -1,0 +1,10 @@
+Django==4.2.23
+djangorestframework
+drf-spectacular
+djangorestframework-simplejwt
+celery
+redis
+django-cors-headers
+openai
+gunicorn
+yfinance

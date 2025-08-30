@@ -14,12 +14,13 @@ const handler = NextAuth({
                 // Call Django backend login API
                 try {
                     const res = await axios.post(
-                        process.env.NEXT_PUBLIC_DJANGO_API_URL + "/api/auth/login/",
+                        process.env.NEXT_PUBLIC_DJANGO_API_URL + "/auth/login/",
                         {
                             username: credentials?.username,
                             password: credentials?.password,
                         }
                     );
+                    console.log(res.data);
                     if (res.data && res.data.access && res.data.refresh) {
                         // 返回用户信息和 access/refresh token
                         return {
@@ -31,7 +32,9 @@ const handler = NextAuth({
                         };
                     }
                     return null;
-                } catch {
+                } catch (error) {
+                    console.error("request url:", process.env.NEXT_PUBLIC_DJANGO_API_URL + "/auth/login/");
+                    console.error("Authorize error:", error);
                     return null;
                 }
             },
@@ -67,7 +70,7 @@ const handler = NextAuth({
                 if (accessPayload && accessPayload.exp && accessPayload.exp < now) {
                     try {
                         const refreshRes = await axios.post(
-                            process.env.NEXT_PUBLIC_DJANGO_API_URL + "/api/auth/refresh/",
+                            process.env.NEXT_PUBLIC_DJANGO_API_URL + "/auth/refresh/",
                             { refresh: token.refresh }
                         );
                         if (refreshRes.data && refreshRes.data.access) {

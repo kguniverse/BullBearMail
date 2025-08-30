@@ -38,7 +38,7 @@ export default function SubscriptionList() {
     const fetchSubscriptions = () => {
         if (status !== "authenticated") return;
         setLoading(true);
-        fetch("http://localhost:8000/api/subscriptions/", {
+        fetch(`${process.env.NEXT_PUBLIC_DJANGO_API_URL}/subscriptions/`, {
             method: "GET",
             headers: { Authorization: `Bearer ${(session as any).access}` },
         })
@@ -72,7 +72,7 @@ export default function SubscriptionList() {
     // 删除订阅
     const handleDelete = async (id: number) => {
         if (status !== "authenticated") return;
-        await fetch(`http://localhost:8000/api/subscriptions/${id}/`, {
+        await fetch(`${process.env.NEXT_PUBLIC_DJANGO_API_URL}/subscriptions/${id}/`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${(session as any).access}` },
         });
@@ -83,7 +83,7 @@ export default function SubscriptionList() {
     const handleSend = async (id: number) => {
         if (status !== "authenticated") return;
         setSendingId(id);
-        await fetch(`http://localhost:8000/api/subscriptions/${id}/send/`, {
+        await fetch(`${process.env.NEXT_PUBLIC_DJANGO_API_URL}/subscriptions/${id}/send/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${(session as any).access}` },
         });
@@ -95,7 +95,7 @@ export default function SubscriptionList() {
     const handleAdd = async () => {
         if (status !== "authenticated") return;
         setAddLoading(true);
-        const res = await fetch("http://localhost:8000/api/subscriptions/", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_DJANGO_API_URL}/subscriptions/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -137,7 +137,7 @@ export default function SubscriptionList() {
         if (status !== "authenticated" || subs.length === 0) return;
         setSendAllLoading(true);
         // You can send all in one request if backend supports, or loop through each
-        await fetch("http://localhost:8000/api/subscriptions/sendall/", {
+        await fetch(`${process.env.NEXT_PUBLIC_DJANGO_API_URL}/subscriptions/sendall/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${(session as any).access}` },
         });
