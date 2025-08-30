@@ -246,6 +246,7 @@ export default function SubscriptionList() {
                             </TableRow>
                         ) : (
                             <TableRow>
+                                {isAdmin && <TableCell><span className="text-gray-400">Auto</span></TableCell>}
                                 <TableCell>
                                     <input
                                         type="text"
