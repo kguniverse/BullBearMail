@@ -178,3 +178,12 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour="9-17", day_of_week="mon-fri"),
     },
 }
+
+# CSRF settings for reverse proxy
+CSRF_TRUSTED_ORIGINS = [
+    'https://demo.modulynx.io',
+    'http://demo.modulynx.io',
+]
+
+# Secure proxy SSL header
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
