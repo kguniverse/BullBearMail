@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
+import Head from "next/head";
 
 function LoginCard() {
     const [username, setUsername] = useState("");
@@ -87,10 +88,16 @@ function LoginCard() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
-                <LoginCard />
-            </div>
-        </Suspense>
+        <>
+            <Head>
+                <title>Login | BullBearMail</title>
+                <meta name="description" content="Login to your BullBearMail account." />
+            </Head>
+            <Suspense fallback={<div>Loading...</div>}>
+                <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
+                    <LoginCard />
+                </div>
+            </Suspense>
+        </>
     );
 }

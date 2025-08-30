@@ -1,5 +1,10 @@
 import React from "react";
 
+export const metadata = {
+    title: "Dashboard | BullBearMail",
+    description: "Your dashboard for BullBearMail.",
+};
+
 export default function DashboardPage() {
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50">

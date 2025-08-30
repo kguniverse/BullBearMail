@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2, Plus, Trash2, Send } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-
+import Head from "next/head";
 type Subscription = {
     id: number;
     user: string;
@@ -146,155 +146,159 @@ export default function SubscriptionList() {
     };
 
     return (
-        <div className="max-w-3xl mx-auto mt-10">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">My Subscriptions</h2>
-                <div className="flex items-center gap-4">
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleSendAll}
-                        disabled={sendAllLoading || subs.length === 0}
-                        className="flex items-center gap-2"
-                    >
-                        {sendAllLoading ? (
-                            <Loader2 className="animate-spin h-4 w-4" />
-                        ) : (
-                            <Send className="h-4 w-4" />
-                        )}
-                        Send All
-                    </Button>
-                    <span className="text-sm text-gray-500">
-                        Last Updated: {lastUpdated ? lastUpdated.toLocaleString() : "--"}
-                    </span>
-                    <Button size="sm" onClick={fetchSubscriptions} disabled={loading}>
-                        {loading ? (
-                            <Loader2 className="animate-spin h-4 w-4" />
-                        ) : (
-                            <RefreshCw className="h-4 w-4" />
-                        )}
-                    </Button>
+        <>
+            <Head>
+                <title>My Subscriptions</title>
+            </Head>
+            <div className="max-w-3xl mx-auto mt-10">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold">My Subscriptions</h2>
+                    <div className="flex items-center gap-4">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleSendAll}
+                            disabled={sendAllLoading || subs.length === 0}
+                            className="flex items-center gap-2"
+                        >
+                            {sendAllLoading ? (
+                                <Loader2 className="animate-spin h-4 w-4" />
+                            ) : (
+                                <Send className="h-4 w-4" />
+                            )}
+                            Send All
+                        </Button>
+                        <span className="text-sm text-gray-500">
+                            Last Updated: {lastUpdated ? lastUpdated.toLocaleString() : "--"}
+                        </span>
+                        <Button size="sm" onClick={fetchSubscriptions} disabled={loading}>
+                            {loading ? (
+                                <Loader2 className="animate-spin h-4 w-4" />
+                            ) : (
+                                <RefreshCw className="h-4 w-4" />
+                            )}
+                        </Button>
+                    </div>
                 </div>
+                {loading ? (
+                    <div>Loading...</div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                {isAdmin && <TableHead>User</TableHead>}
+                                <TableHead>Stock</TableHead>
+                                <TableHead>Price</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {subs.map(sub => (
+                                <TableRow key={sub.id}>
+                                    {isAdmin && <TableCell>{sub.user}</TableCell>}
+                                    <TableCell>{sub.stock}</TableCell>
+                                    <TableCell>{sub.price}</TableCell>
+                                    <TableCell>{sub.email}</TableCell>
+                                    <TableCell className="space-x-2 flex">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button
+                                                    type="button"
+                                                    className="p-2 rounded hover:bg-red-100 text-red-600"
+                                                    aria-label="Delete"
+                                                    onClick={() => handleDelete(sub.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Delete</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button
+                                                    type="button"
+                                                    className="p-2 rounded hover:bg-blue-100 text-blue-600"
+                                                    aria-label="Send Now"
+                                                    disabled={sendingId === sub.id}
+                                                    onClick={() => handleSend(sub.id)}
+                                                >
+                                                    {sendingId === sub.id ? (
+                                                        <Loader2 className="animate-spin h-4 w-4" />
+                                                    ) : (
+                                                        <Send className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Send Now</TooltipContent>
+                                        </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {/* Quick add row */}
+                            {!addMode ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center">
+                                        <button
+                                            type="button"
+                                            className="p-2 rounded-full bg-blue-100 hover:bg-blue-200"
+                                            onClick={() => setAddMode(true)}
+                                        >
+                                            <Plus className="h-5 w-5 text-blue-600" />
+                                        </button>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                <TableRow>
+                                    {isAdmin && <TableCell><span className="text-gray-400">Auto</span></TableCell>}
+                                    <TableCell>
+                                        <input
+                                            type="text"
+                                            className="border rounded px-2 py-1 w-full"
+                                            placeholder="Stock"
+                                            value={newStock}
+                                            onChange={e => setNewStock(e.target.value)}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="text-gray-400">Auto</span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <input
+                                            type="email"
+                                            className="border rounded px-2 py-1 w-full"
+                                            placeholder="Email"
+                                            value={newEmail}
+                                            onChange={e => setNewEmail(e.target.value)}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                onClick={handleAdd}
+                                                disabled={addLoading || !newStock || !newEmail}
+                                            >
+                                                {addLoading ? <Loader2 className="animate-spin h-4 w-4 mx-auto" /> : "Add"}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                                onClick={() => setAddMode(false)}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                )}
+                {error && <div className="mt-4 text-red-500 font-medium">{error}</div>}
             </div>
-            {loading ? (
-                <div>Loading...</div>
-            ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            {isAdmin && <TableHead>User</TableHead>}
-                            <TableHead>Stock</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {subs.map(sub => (
-                            <TableRow key={sub.id}>
-                                {isAdmin && <TableCell>{sub.user}</TableCell>}
-                                <TableCell>{sub.stock}</TableCell>
-                                <TableCell>{sub.price}</TableCell>
-                                <TableCell>{sub.email}</TableCell>
-                                <TableCell className="space-x-2 flex">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className="p-2 rounded hover:bg-red-100 text-red-600"
-                                                aria-label="Delete"
-                                                onClick={() => handleDelete(sub.id)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Delete</TooltipContent>
-                                    </Tooltip>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className="p-2 rounded hover:bg-blue-100 text-blue-600"
-                                                aria-label="Send Now"
-                                                disabled={sendingId === sub.id}
-                                                onClick={() => handleSend(sub.id)}
-                                            >
-                                                {sendingId === sub.id ? (
-                                                    <Loader2 className="animate-spin h-4 w-4" />
-                                                ) : (
-                                                    <Send className="h-4 w-4" />
-                                                )}
-                                            </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Send Now</TooltipContent>
-                                    </Tooltip>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {/* Quick add row */}
-                        {!addMode ? (
-                            <TableRow>
-                                <TableCell colSpan={4} className="text-center">
-                                    <button
-                                        type="button"
-                                        className="p-2 rounded-full bg-blue-100 hover:bg-blue-200"
-                                        onClick={() => setAddMode(true)}
-                                    >
-                                        <Plus className="h-5 w-5 text-blue-600" />
-                                    </button>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            <TableRow>
-                                {isAdmin && <TableCell><span className="text-gray-400">Auto</span></TableCell>}
-                                <TableCell>
-                                    <input
-                                        type="text"
-                                        className="border rounded px-2 py-1 w-full"
-                                        placeholder="Stock"
-                                        value={newStock}
-                                        onChange={e => setNewStock(e.target.value)}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <span className="text-gray-400">Auto</span>
-                                </TableCell>
-                                <TableCell>
-                                    <input
-                                        type="email"
-                                        className="border rounded px-2 py-1 w-full"
-                                        placeholder="Email"
-                                        value={newEmail}
-                                        onChange={e => setNewEmail(e.target.value)}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex gap-2">
-                                        <button
-                                            type="button"
-                                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                            onClick={handleAdd}
-                                            disabled={addLoading || !newStock || !newEmail}
-                                        >
-                                            {addLoading ? <Loader2 className="animate-spin h-4 w-4 mx-auto" /> : "Add"}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                                            onClick={() => setAddMode(false)}
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            )}
-            {error && <div className="mt-4 text-red-500 font-medium">{error}</div>}
-
-        </div>
+        </>
     );
 }
 
