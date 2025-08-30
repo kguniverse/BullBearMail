@@ -1,9 +1,14 @@
-import Image from "next/image";
 import Link from "next/link";
+import { Metadata } from "next";
 
-export const metadata = {
-  title: "Welcome | BullBearMail",
-  description: "Your dashboard for BullBearMail.",
+export const metadata: Metadata = {
+  title: "Welcome",
+  description: "Welcome to BullBearMail - Your intelligent stock price monitoring and email notification service. Get started with your dashboard.",
+  openGraph: {
+    title: "Welcome to BullBearMail",
+    description: "Your intelligent stock price monitoring and email notification service",
+    url: "/",
+  },
 };
 
 export default function Home() {

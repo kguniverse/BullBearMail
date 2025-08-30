@@ -1,8 +1,13 @@
 import React from "react";
+import { Metadata } from "next";
 
-export const metadata = {
-    title: "Dashboard | BullBearMail",
-    description: "Your dashboard for BullBearMail.",
+export const metadata: Metadata = {
+    title: "Dashboard",
+    description: "Your BullBearMail dashboard. Access all your stock subscriptions and account management tools.",
+    openGraph: {
+        title: "Dashboard - BullBearMail",
+        description: "Manage your stock subscriptions and notifications",
+    },
 };
 
 export default function DashboardPage() {

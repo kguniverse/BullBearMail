@@ -1,7 +1,11 @@
-"use client";
+import { Metadata } from "next";
+import DashboardClientLayout from "@/components/dashboard/DashboardClientLayout";
 
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+export const metadata: Metadata = {
+    title: "Dashboard",
+    description: "Manage your stock subscriptions and monitor market updates.",
+};
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-    return <DashboardLayout>{children}</DashboardLayout>;
+    return <DashboardClientLayout>{children}</DashboardClientLayout>;
 }

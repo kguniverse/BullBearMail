@@ -123,7 +123,8 @@ export default function SubscriptionListPage() {
     return (
         <>
             <Head>
-                <title>My Subscriptions</title>
+                <title>My Subscriptions | BullBearMail</title>
+                <meta name="description" content="View and manage your stock subscriptions." />
             </Head>
             <div className="max-w-3xl mx-auto mt-10">
                 <SubscriptionHeader
