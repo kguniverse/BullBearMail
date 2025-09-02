@@ -24,7 +24,11 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return symbol
 
     def get_details(self, obj):
-        return get_realtime_details(obj.stock_ticker)
+        try:
+            details = get_realtime_details(obj.stock_ticker)
+            return details or {"error": "Unable to fetch stock details"}
+        except Exception as e:
+            return {"error": f"Error fetching details: {str(e)}"}
 
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
